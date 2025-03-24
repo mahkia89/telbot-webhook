@@ -34,7 +34,7 @@ async def handle_webhook(request: Request):
 # To set webhook manually using the Telegram API
 def set_webhook():
     url = f"https://api.telegram.org/bot{TOKEN}/setWebhook"
-    webhook_url = "https://your-domain.com/webhook"  # Replace with your actual webhook URL
+    webhook_url = "https://telbot-webhook.onrender.com/webhook"  # Replace with your actual webhook URL
     params = {"url": webhook_url}
     response = requests.post(url, params=params)
     print(response.json())
