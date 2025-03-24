@@ -29,6 +29,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("help", help_command))
 
+@app.get("/")
+async def root():
+    return {"message": "Bot is running!"}
+
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     """Handle incoming Telegram updates."""
