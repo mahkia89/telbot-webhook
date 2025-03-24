@@ -6,52 +6,48 @@ from fastapi import FastAPI, Request, Response
 from telegram import Update
 from telegram.ext import Application, ContextTypes, CommandHandler, MessageHandler, filters
 
-
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
-TELEGRAM_BOT_TOKEN: str = os.getenv('BOT_TOKEN')
-WEBHOOK_DOMAIN: str = os.getenv('RENDER_DOMAIN')
+TELEGRAM_TOKEN: str = os.getenv('BOT_TOKEN')
+WEBHOOK_URL: str = os.getenv('RENDER_URL')
 
-# Build the Telegram Bot application
-bot_builder = (
+# Create the Telegram bot application
+bot_app = (
     Application.builder()
-    .token(TELEGRAM_BOT_TOKEN)
+    .token(TELEGRAM_TOKEN)
     .updater(None)
     .build()
 )
 
-
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    """ Sets the webhook for the Telegram Bot and manages its lifecycle (start/stop). """
-    await bot_builder.bot.setWebhook(url=WEBHOOK_DOMAIN)
-    async with bot_builder:
-        await bot_builder.start()
+    """Set up the webhook and manage bot lifecycle (start/stop)."""
+    await bot_app.bot.setWebhook(url=WEBHOOK_URL)
+    async with bot_app:
+        await bot_app.start()
         yield
-        await bot_builder.stop()
-
+        await bot_app.stop()
 
 app = FastAPI(lifespan=lifespan)
 
-
-@app.post("/")
-async def process_update(request: Request):
-    """ Handles incoming Telegram updates and processes them with the bot. """
-    message = await request.json()
-    update = Update.de_json(data=message, bot=bot_builder.bot)
-    await bot_builder.process_update(update)
+@app.post("/webhook")
+async def handle_update(request: Request):
+    """Process incoming updates and forward to Telegram bot for handling."""
+    incoming_message = await request.json()
+    update = Update.de_json(data=incoming_message, bot=bot_app.bot)
+    await bot_app.process_update(update)
     return Response(status_code=HTTPStatus.OK)
 
+# Command handler for /hello
+async def hello(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    """Respond to the /hello command with a greeting."""
+    await update.message.reply_text("Hi! Send me a message and I'll repeat it!")
 
-async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
-    """ Handles the /start command by sending a "Hello world!" message in response. """
-    await update.message.reply_text("HEYYY! Send me a message and I'll echo it back to you")
-
-
-async def echo(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    """Echo the user message."""
+# Message handler for text messages
+async def repeat_message(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+    """Echo any received message back to the user."""
     await update.message.reply_text(update.message.text)
 
-
-bot_builder.add_handler(CommandHandler(command="start", callback=start))
-bot_builder.add_handler(MessageHandler(filters=filters.TEXT & ~filters.COMMAND, callback=echo))
+# Adding command and message handlers to the bot
+bot_app.add_handler(CommandHandler(command="hello", callback=hello))
+bot_app.add_handler(MessageHandler(filters=filters.TEXT & ~filters.COMMAND, callback=repeat_message))
