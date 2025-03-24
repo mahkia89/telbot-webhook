@@ -6,6 +6,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -37,6 +38,7 @@ async def root():
 async def telegram_webhook(request: Request):
     """Handle incoming Telegram updates."""
     data = await request.json()
+    logger.info(f"Webhook received: {data}")
     update = Update.de_json(data, application.bot)
     await application.process_update(update)
     return {"status": "ok"}
