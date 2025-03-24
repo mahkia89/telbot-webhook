@@ -1,10 +1,9 @@
 import os
 import logging
 from fastapi import FastAPI, Request
-import requests
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
-import uvicorn
+import requests
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -39,48 +38,31 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("help", help_command))
 
-# Root endpoint to check if the bot is running
 @app.get("/")
 async def root():
     return {"message": "Bot is running!"}
 
-# Webhook endpoint to handle POST requests from Telegram
 @app.post("/webhook")
 async def webhook(request: Request):
-    try:
-        data = await request.json()
-        print("Received data:", data)  # Log incoming update data for debugging
-        
-        # Process the incoming update
-        if "message" in data:
-            message = data["message"]
-            chat_id = message["chat"]["id"]
-            text = "Hello, I received your message!"
-            
-            # Send a response back to the user
-            send_message(chat_id, text)
+    data = await request.json()
+    print("Received data:", data)  # Log incoming data for debugging
 
-        return {"status": "ok"}
-    except Exception as e:
-        print("Error:", str(e))
-        return {"error": str(e)}
+    # Process the incoming update and send a message
+    if "message" in data:
+        message = data["message"]
+        chat_id = message["chat"]["id"]
+        text = "Hello, I received your message!"  # Customize your response here
+        send_message(chat_id, text)
 
-# To set webhook manually using the Telegram API
-def set_webhook():
-    url = f"https://api.telegram.org/bot{API_TOKEN}/setWebhook"
-    webhook_url = "https://telbot-webhook.onrender.com/webhook"  # Replace with your actual webhook URL
-    params = {"url": webhook_url}
-    response = requests.post(url, params=params)
-    print(response.json())
+    return {"status": "ok"}
 
-# Set webhook when the app starts
 @app.on_event("startup")
-async def startup_event():
-    """Set the webhook when the app starts."""
-    set_webhook()
+async def set_webhook():
+    """Set Telegram webhook when the app starts."""
+    await application.bot.set_webhook(WEBHOOK_URL)
 
-# Run the FastAPI application using Uvicorn
 if __name__ == "__main__":
-    # Get the port from the environment, default to 10000 if not set (for Render)
+    import uvicorn
+    # Get the port from the environment, default to 10000 if not set
     port = int(os.getenv("PORT", 10000))
     uvicorn.run(app, host="0.0.0.0", port=port)
