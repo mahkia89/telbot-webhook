@@ -15,11 +15,16 @@ def send_message(chat_id: int, text: str):
     return response.json()
 
 # Webhook endpoint
+from fastapi import FastAPI, HTTPException
+
+app = FastAPI()
+
 @app.post("/webhook")
-async def webhook(request: Request):
-    # Parse the incoming JSON payload
-    data = await request.json()
-    print(f"Received data: {data}")
+async def handle_webhook(data: dict):
+    # Process incoming data here
+    print("Received data:", data)
+    return {"status": "success", "message": "Data received"}
+
 
     # Process the incoming update
     if "message" in data:
