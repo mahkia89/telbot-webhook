@@ -12,7 +12,7 @@ app = FastAPI()
 
 # Your bot token
 API_TOKEN = "7770292317:AAEx_FmuU-jfSwDO8bAg5rkd3SW-GcQivJ0"  # Replace with your actual bot token
-WEBHOOK_URL = "https://your-app-name.onrender.com/webhook"  # Replace with your Render URL
+WEBHOOK_URL = "https://telbot-webhook.onrender.com/webhook"  # Replace with your Render URL
 
 # Create Telegram application
 application = Application.builder().token(API_TOKEN).build()
