@@ -19,11 +19,9 @@ from fastapi import FastAPI, HTTPException
 
 app = FastAPI()
 
-@app.post("/webhook")
-async def handle_webhook(data: dict):
-    # Process incoming data here
-    print("Received data:", data)
-    return {"status": "success", "message": "Data received"}
+@app.api_route("/webhook")
+async def handle_webhook(request: Request):
+    return {"method": request.method, "message": "Request accepted"}
 
 
     # Process the incoming update
