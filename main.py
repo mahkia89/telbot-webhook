@@ -45,7 +45,7 @@ async def process_update(request: Request):
 
 async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
     """ Handles the /start command by sending a "Hello world!" message in response. """
-    await update.message.reply_text("Hello! 🍡 Send me a message and I'll echo it back to you")
+    await update.message.reply_text("HEYYY! Send me a message and I'll echo it back to you")
 
 
 async def echo(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
