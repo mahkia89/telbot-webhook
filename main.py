@@ -30,7 +30,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-@app.post("/webhook")
+@app.post("/")
 async def handle_update(request: Request):
     """Process incoming updates and forward to Telegram bot for handling."""
     incoming_message = await request.json()
