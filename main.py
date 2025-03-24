@@ -15,6 +15,15 @@ app = FastAPI()
 API_TOKEN = "7770292317:AAEx_FmuU-jfSwDO8bAg5rkd3SW-GcQivJ0"  # Replace with your actual bot token
 WEBHOOK_URL = "https://telbot-webhook.onrender.com/webhook"  # Replace with your Render URL
 
+import requests
+
+url = "https://telbot-webhook.onrender.com/webhook"
+headers = {"Content-Type": "application/json"}
+data = {"update_id": 12345}
+
+response = requests.post(url, json=data, headers=headers)
+print(response.status_code, response.text)
+
 # Create Telegram application
 application = Application.builder().token(API_TOKEN).build()
 
@@ -35,13 +44,15 @@ async def root():
     return {"message": "Bot is running!"}
 
 @app.post("/webhook")
-async def telegram_webhook(request: Request):
-    """Handle incoming Telegram updates."""
-    data = await request.json()
-    logger.info(f"Webhook received: {data}")
-    update = Update.de_json(data, application.bot)
-    await application.process_update(update)
-    return {"status": "ok"}
+@app.post("/webhook")
+async def webhook(request: Request):
+    try:
+        data = await request.json()
+        print("Received data:", data)
+        return {"status": "ok"}
+    except Exception as e:
+        print("Error:", str(e))
+        return {"error": str(e)}
 
 @app.on_event("startup")
 async def set_webhook():
