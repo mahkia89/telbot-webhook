@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 import requests
 import json
 
@@ -14,16 +14,12 @@ def send_message(chat_id: int, text: str):
     response = requests.post(url, json=data)
     return response.json()
 
-# Webhook endpoint
-from fastapi import FastAPI, HTTPException
-
-app = FastAPI()
-
-@app.api_route("/webhook")
+# Webhook endpoint to handle POST requests
+@app.post("/webhook")
 async def handle_webhook(request: Request):
-    return {"method": request.method, "message": "Request accepted"}
-
-
+    data = await request.json()  # Get the incoming JSON data
+    print("Received data:", data)  # Log data for debugging
+    
     # Process the incoming update
     if "message" in data:
         message = data["message"]
@@ -44,5 +40,6 @@ def set_webhook():
     print(response.json())
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=443)
+    # Get the port from the environment, default to 8000 if not set
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
