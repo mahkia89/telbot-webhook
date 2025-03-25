@@ -79,7 +79,7 @@ async def jobs(update: Update, _: ContextTypes.DEFAULT_TYPE):
     message_text = update.message.text
     parts = message_text.split("/jobs")
     if len(parts) < 2 or not parts[1].strip():
-        await update.message.reply_text("This Telegram bot helps users find freelance jobs based on their own custom keywords.\n\n Instead of relying on predefined filters, users can input their own keywords in a structured format (e.g., keyword1 - keyword2 - keyword3), and the bot will scrape Freelancer.com for relevant job listings. When matching jobs are found, the bot sends them directly to the user on Telegram.\n\n  Please enter keywords like: /jobs python - scraping - API")
+        await update.message.reply_text(" Please enter keywords like: /jobs python - scraping - API")
         return
 
     # Extract and clean keywords
