@@ -160,7 +160,7 @@ async def jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(message, parse_mode="Markdown", disable_web_page_preview=False)
             await asyncio.sleep(2)  # Asynchronous delay to prevent spam
             
-        logging.info(f"Sent {len(jobs[:5])} jobs to user {update.effective_user.id}")
+        logging.info(f"Sent {len(jobs[:10])} jobs to user {update.effective_user.id}")
         await update.message.reply_text(f"✅ Sent {len(jobs[:5])} jobs to you!")
     else:
         logging.info(f"No jobs found for user {update.effective_user.id}")
