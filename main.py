@@ -1,5 +1,6 @@
 import os
 import time
+import asyncio
 from contextlib import asynccontextmanager
 from http import HTTPStatus
 from dotenv import load_dotenv
@@ -11,8 +12,8 @@ from bs4 import BeautifulSoup
 
 # Load environment variables
 load_dotenv()
-TELEGRAM_BOT_TOKEN: str = os.getenv('BOT_TOKEN')
-WEBHOOK_DOMAIN: str = os.getenv('RENDER_URL')
+TELEGRAM_BOT_TOKEN = os.getenv('BOT_TOKEN')
+WEBHOOK_DOMAIN = os.getenv('RENDER_URL')
 
 # Build the Telegram Bot application
 bot_builder = (
@@ -47,11 +48,14 @@ JOB_SITES = {
     "laborx": "https://laborx.com/jobs/development",
 }
 
+HEADERS = {"User-Agent": "Mozilla/5.0"}
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /start command by sending a selection keyboard."""
     keyboard = [
         [InlineKeyboardButton("Freelancer", callback_data="freelancer")],
-        [InlineKeyboardButton("LaborX", callback_data="laborx")]
+        [InlineKeyboardButton("LaborX", callback_data="laborx")],
+        [InlineKeyboardButton("Both", callback_data="both")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Choose a job site to search:", reply_markup=reply_markup)
@@ -65,10 +69,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def scrape_jobs(keywords, site):
     """Scrapes Freelancer or LaborX for jobs matching user-defined keywords."""
-    url = JOB_SITES.get(site, JOB_SITES['freelancer'])
-    response = requests.get(url)
-    if response.status_code != 200:
-        print("Failed to fetch page")
+    url = JOB_SITES.get(site)
+    if not url:
+        return []
+
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=10)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        print(f"Error fetching {site}: {e}")
         return []
 
     soup = BeautifulSoup(response.text, "html.parser")
@@ -94,6 +103,7 @@ def scrape_jobs(keywords, site):
             
             if any(keyword.lower() in (title + description).lower() for keyword in keywords):
                 jobs.append({"title": title, "description": description, "link": link})
+    
     return jobs
 
 async def jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -104,21 +114,25 @@ async def jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Please enter keywords like: /jobs python - scraping - API")
         return
 
-    # Extract and clean keywords
     keywords = [word.strip() for word in parts[1].split("-") if word.strip()]
-    
     if not keywords:
         await update.message.reply_text("❌ Please provide at least one keyword.")
         return
 
     selected_site = context.user_data.get('selected_site', 'freelancer')
-    jobs = scrape_jobs(keywords, selected_site)
-    
+
+    if selected_site == "both":
+        jobs_freelancer = scrape_jobs(keywords, "freelancer")
+        jobs_laborx = scrape_jobs(keywords, "laborx")
+        jobs = jobs_freelancer + jobs_laborx
+    else:
+        jobs = scrape_jobs(keywords, selected_site)
+
     if jobs:
         for job in jobs[:5]:  # Limit to top 5 jobs
-            message = f"📢 *New Job Alert!*\n*{job['title']}*{job['description']}\n[View Job]({job['link']})"
+            message = f"📢 *New Job Alert!*\n\n*{job['title']}*\n{job['description']}\n\n[View Job]({job['link']})"
             await update.message.reply_text(message, parse_mode='Markdown', disable_web_page_preview=False)
-            time.sleep(2)  # Avoid spamming Telegram
+            await asyncio.sleep(2)  # Asynchronous delay
         await update.message.reply_text(f"✅ Sent {len(jobs[:5])} jobs to you!")
     else:
         await update.message.reply_text("❌ No matching jobs found.")
