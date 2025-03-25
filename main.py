@@ -34,12 +34,20 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
 @app.post("/")
 async def process_update(request: Request):
     """Handles incoming Telegram updates and processes them with the bot."""
     message = await request.json()
+    logging.info(f"Received update: {message}")  # Log the entire update
+    
     update = Update.de_json(data=message, bot=bot_builder.bot)
     await bot_builder.process_update(update)
+    
     return Response(status_code=HTTPStatus.OK)
 
 # Job sites dictionary
@@ -69,15 +77,19 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def scrape_jobs(keywords, site):
     """Scrapes Freelancer or LaborX for jobs matching user-defined keywords."""
+    
     url = JOB_SITES.get(site)
     if not url:
+        logging.error(f"Invalid site name: {site}")
         return []
 
     try:
+        logging.info(f"Fetching jobs from {url}...")
         response = requests.get(url, headers=HEADERS, timeout=10)
         response.raise_for_status()
+        logging.info(f"Successfully fetched data from {url}, status: {response.status_code}")
     except requests.RequestException as e:
-        print(f"Error fetching {site}: {e}")
+        logging.error(f"Error fetching {site}: {e}")
         return []
 
     soup = BeautifulSoup(response.text, "html.parser")
@@ -96,30 +108,39 @@ def scrape_jobs(keywords, site):
             title_element = job.select_one("h3 a")
             description_element = job.select_one("p")
             link = f"https://laborx.com{title_element['href']}" if title_element else ""
-        
+
         if title_element and description_element:
             title = title_element.get_text(strip=True)
             description = description_element.get_text(strip=True)
-            
+
             if any(keyword.lower() in (title + description).lower() for keyword in keywords):
                 jobs.append({"title": title, "description": description, "link": link})
-    
+
+    logging.info(f"Scraped {len(jobs)} jobs from {site}")
     return jobs
+
 
 async def jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /jobs command by scraping and sending job listings."""
+    
+    logging.info(f"Received /jobs command from user: {update.effective_user.id}, text: {update.message.text}")
+    
     message_text = update.message.text
     parts = message_text.split("/jobs")
+    
     if len(parts) < 2 or not parts[1].strip():
+        logging.warning("User did not provide keywords.")
         await update.message.reply_text("❌ Please enter keywords like: /jobs python - scraping - API")
         return
 
     keywords = [word.strip() for word in parts[1].split("-") if word.strip()]
     if not keywords:
+        logging.warning("User provided an empty keyword list.")
         await update.message.reply_text("❌ Please provide at least one keyword.")
         return
 
-    selected_site = context.user_data.get('selected_site', 'freelancer')
+    selected_site = context.user_data.get("selected_site", "freelancer")
+    logging.info(f"User selected site: {selected_site}")
 
     if selected_site == "both":
         jobs_freelancer = scrape_jobs(keywords, "freelancer")
@@ -128,14 +149,20 @@ async def jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         jobs = scrape_jobs(keywords, selected_site)
 
+    logging.info(f"Found {len(jobs)} jobs matching keywords {keywords} on {selected_site}")
+
     if jobs:
         for job in jobs[:5]:  # Limit to top 5 jobs
             message = f"📢 *New Job Alert!*\n\n*{job['title']}*\n{job['description']}\n\n[View Job]({job['link']})"
-            await update.message.reply_text(message, parse_mode='Markdown', disable_web_page_preview=False)
-            await asyncio.sleep(2)  # Asynchronous delay
+            await update.message.reply_text(message, parse_mode="Markdown", disable_web_page_preview=False)
+            await asyncio.sleep(2)  # Asynchronous delay to prevent spam
+            
+        logging.info(f"Sent {len(jobs[:5])} jobs to user {update.effective_user.id}")
         await update.message.reply_text(f"✅ Sent {len(jobs[:5])} jobs to you!")
     else:
+        logging.info(f"No jobs found for user {update.effective_user.id}")
         await update.message.reply_text("❌ No matching jobs found.")
+
 
 bot_builder.add_handler(CommandHandler(command="start", callback=start))
 bot_builder.add_handler(CallbackQueryHandler(button))
