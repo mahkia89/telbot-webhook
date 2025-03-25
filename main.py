@@ -58,18 +58,12 @@ FILTER_KEYWORDS = [
     "Python", "python", "AI", "ai", "Scraping", "scraping", "Automation", "automation", "Robotic Process Automation", "robotic process automation",
     "RPA", "rpa", "Task Automation", "task automation", "Selenium", "selenium", "UI Automation", "ui automation", "API Automation", "api automation",
     "Workflow Automation", "workflow automation", "Continuous Integration", "continuous integration", "CI/CD", "ci/cd", "Automated Testing", "automated testing",
-    "Automation Scripts", "automation scripts", "Automation Tools", "automation tools", "Bash Scripting", "bash scripting", "PowerShell Scripting", "powershell scripting",
-    "GitLab CI", "gitlab ci", "Docker", "docker", "REST API", "rest api", "GraphQL", "graphql", "Web API", "web api", "JSON", "json", "OAuth", "oauth", "JWT", "jwt",
-    "API Integration", "api integration", "API Development", "api development", "API Testing", "api testing", "Swagger", "swagger", "Postman", "postman",
-    "API Documentation", "api documentation", "API Endpoints", "api endpoints", "API Authentication", "api authentication", "Rate Limiting", "rate limiting",
-    "API Security", "api security", "API Gateway", "api gateway", "Requests", "requests", "BeautifulSoup", "beautifulsoup", "Scrapy", "scrapy", "Puppeteer", "puppeteer",
-    "Requests-HTML", "requests-html", "LXML", "lxml", "PyAutoGUI", "pyautogui", "Playwright", "playwright", "Celery", "celery", "FastAPI", "fastapi", "Flask", "flask",
-    "Django", "django", "Pandas", "pandas", "NumPy", "numpy", "SQLAlchemy", "sqlalchemy", "SQLite", "sqlite", "MongoDB", "mongodb", "Redis", "redis", "Node.js", "node.js",
-    "Express.js", "express.js", "Go", "go", "PHP", "php", "Ruby", "ruby", "Java", "java", "C#", "c#", "Software Engineer", "software engineer", "Backend Developer", "backend developer",
-    "Full Stack Developer", "full stack developer", "Data Engineer", "data engineer", "DevOps", "devops", "Machine Learning", "machine learning", "Big Data", "big data",
-    "Cloud Computing", "cloud computing", "AWS", "aws", "GCP", "gcp", "Azure", "azure", "Kubernetes", "kubernetes", "Jenkins", "jenkins", "Data Engineering", "data engineering",
-    "Data Science", "data science", "ETL", "etl", "Web Development", "web development", "Microservices", "microservices", "Distributed Systems", "distributed systems",
-    "High-Performance Computing", "high-performance computing", "Data Visualization", "data visualization", "Data Warehousing", "data warehousing", "Cloud Storage", "cloud storage"
+    "Automation Scripts", "automation scripts", "Automation Tools", "automation tools", "Docker", "docker", "REST API", "rest api", "GraphQL", "graphql", "Web API", "web api", "JSON", "json",
+    "API Integration", "api integration", "API Development", "api development", "API Testing", "api testing", "Postman", "postman",
+    "API Documentation", "api documentation", "API Endpoints", "api endpoints", "API Authentication", "api authentication",
+    "API Security", "api security", "API Gateway", "api gateway", "Requests", "requests", "BeautifulSoup", "beautifulsoup", "Scrapy", "scrapy",
+    "Requests-HTML", "requests-html", "PyAutoGUI", "pyautogui", "Celery", "celery", "FastAPI", "fastapi", "Flask", "flask", "telegram", "Telegram",
+    "Django", "django", "Pandas", "pandas", "NumPy", "numpy", "SQLAlchemy", "sqlalchemy", "SQLite", "sqlite", "Backend Developer", "backend developer", "Machine Learning", "machine learning", "AWS", "aws", "Web Development", "web development", "Data Visualization", "data visualization", "Cloud Storage", "cloud storage"
 ]
 
 def scrape_jobs():
