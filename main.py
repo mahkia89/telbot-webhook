@@ -55,15 +55,7 @@ URL = "https://www.freelancer.com/jobs/software-development"
 
 # Keywords for filtering jobs
 FILTER_KEYWORDS = [
-    "Python", "python", "AI", "ai", "Scraping", "scraping", "Automation", "automation", "Robotic Process Automation", "robotic process automation",
-    "RPA", "rpa", "Task Automation", "task automation", "Selenium", "selenium", "UI Automation", "ui automation", "API Automation", "api automation",
-    "Workflow Automation", "workflow automation", "Continuous Integration", "continuous integration", "CI/CD", "ci/cd", "Automated Testing", "automated testing",
-    "Automation Scripts", "automation scripts", "Automation Tools", "automation tools", "Docker", "docker", "REST API", "rest api", "GraphQL", "graphql", "Web API", "web api", "JSON", "json",
-    "API Integration", "api integration", "API Development", "api development", "API Testing", "api testing", "Postman", "postman",
-    "API Documentation", "api documentation", "API Endpoints", "api endpoints", "API Authentication", "api authentication",
-    "API Security", "api security", "API Gateway", "api gateway", "Requests", "requests", "BeautifulSoup", "beautifulsoup", "Scrapy", "scrapy",
-    "Requests-HTML", "requests-html", "PyAutoGUI", "pyautogui", "Celery", "celery", "FastAPI", "fastapi", "Flask", "flask", "telegram", "Telegram",
-    "Django", "django", "Pandas", "pandas", "NumPy", "numpy", "SQLAlchemy", "sqlalchemy", "SQLite", "sqlite", "Backend Developer", "backend developer", "Machine Learning", "machine learning", "AWS", "aws", "Web Development", "web development", "Data Visualization", "data visualization", "Cloud Storage", "cloud storage"
+"scaping", "Api"
 ]
 
 def scrape_jobs():
