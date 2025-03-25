@@ -1,4 +1,3 @@
-
 import os
 import time
 from contextlib import asynccontextmanager
@@ -42,16 +41,20 @@ async def process_update(request: Request):
     await bot_builder.process_update(update)
     return Response(status_code=HTTPStatus.OK)
 
-async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /start command by sending a greeting message."""
+    context.user_data['selected_site'] = 'freelancer'  # Default to Freelancer
     await update.message.reply_text("Hello! Use /jobs keyword1 - keyword2 - keyword3 to find jobs.")
 
 # Freelancer Jobs URL
-URL = "https://www.freelancer.com/jobs/software-development"
+JOB_SITES = {
+    "freelancer": "https://www.freelancer.com/jobs/software-development",
+}
 
-def scrape_jobs(keywords):
+def scrape_jobs(keywords, site):
     """Scrapes Freelancer for jobs matching user-defined keywords."""
-    response = requests.get(URL)
+    url = JOB_SITES.get(site, JOB_SITES['freelancer'])
+    response = requests.get(url)
     if response.status_code != 200:
         print("Failed to fetch page")
         return []
@@ -74,12 +77,12 @@ def scrape_jobs(keywords):
                 jobs.append({"title": title, "description": description, "link": link})
     return jobs
 
-async def jobs(update: Update, _: ContextTypes.DEFAULT_TYPE):
+async def jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /jobs command by scraping and sending job listings."""
     message_text = update.message.text
     parts = message_text.split("/jobs")
     if len(parts) < 2 or not parts[1].strip():
-        await update.message.reply_text(" Please enter keywords like: /jobs python - scraping - API")
+        await update.message.reply_text("❌ Please enter keywords like: /jobs python - scraping - API")
         return
 
     # Extract and clean keywords
@@ -89,14 +92,15 @@ async def jobs(update: Update, _: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Please provide at least one keyword.")
         return
 
-jobs_list = scrape_jobs(keywords)
+    selected_site = context.user_data.get('selected_site', 'freelancer')
+    jobs = scrape_jobs(keywords, selected_site)
     
     if jobs:
-        for job in jobs_list[:5]:  # Limit to top 5 jobs
+        for job in jobs[:5]:  # Limit to top 5 jobs
             message = f"📢 *New Job Alert!*\n\n*{job['title']}*\n{job['description']}\n\n[View Job]({job['link']})"
             await update.message.reply_text(message, parse_mode='Markdown', disable_web_page_preview=False)
             time.sleep(2)  # Avoid spamming Telegram
-        await update.message.reply_text(f"✅ Sent {len(jobs_list[:5])} jobs to you!")
+        await update.message.reply_text(f"✅ Sent {len(jobs[:5])} jobs to you!")
     else:
         await update.message.reply_text("❌ No matching jobs found.")
 
