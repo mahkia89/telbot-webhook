@@ -98,10 +98,11 @@ async def jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if jobs:
         for job in jobs:
-            message = f"📢 *New Job Alert!*
-*{job['title']}*
-{job['description']}
-[View Job]({job['link']})"
+                    message = f"📢 *New Job Alert!*\n" \
+                  f"*{job['title']}*\n" \
+                  f"{job['description']}\n" \
+                  f"[View Job]({job['link']})"
+
             await update.message.reply_text(message, parse_mode='Markdown', disable_web_page_preview=False)
             time.sleep(2)
         await update.message.reply_text(f"✅ Sent {len(jobs)} jobs to you!")
