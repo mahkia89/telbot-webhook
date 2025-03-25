@@ -91,7 +91,7 @@ async def jobs(update: Update, _: ContextTypes.DEFAULT_TYPE):
 
 jobs_list = scrape_jobs(keywords)
     
-    if jobs_list:
+    if jobs:
         for job in jobs_list[:5]:  # Limit to top 5 jobs
             message = f"📢 *New Job Alert!*\n\n*{job['title']}*\n{job['description']}\n\n[View Job]({job['link']})"
             await update.message.reply_text(message, parse_mode='Markdown', disable_web_page_preview=False)
