@@ -5,14 +5,13 @@ from http import HTTPStatus
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import Application, ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters
+from telegram.ext import Application, ContextTypes, CommandHandler, CallbackQueryHandler
 import requests
 from bs4 import BeautifulSoup
 
 # Load environment variables
 load_dotenv()
 TELEGRAM_BOT_TOKEN: str = os.getenv('BOT_TOKEN')
-TELEGRAM_ID: str = os.getenv('TELEGRAM_ID')
 WEBHOOK_DOMAIN: str = os.getenv('RENDER_URL')
 
 # Define job websites
@@ -32,6 +31,7 @@ bot_builder = (
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    """Sets the webhook for the Telegram Bot and manages its lifecycle (start/stop)."""
     await bot_builder.bot.setWebhook(url=WEBHOOK_DOMAIN)
     async with bot_builder:
         await bot_builder.start()
@@ -42,13 +42,14 @@ app = FastAPI(lifespan=lifespan)
 
 @app.post("/")
 async def process_update(request: Request):
+    """Handles incoming Telegram updates and processes them with the bot."""
     message = await request.json()
     update = Update.de_json(data=message, bot=bot_builder.bot)
     await bot_builder.process_update(update)
     return Response(status_code=HTTPStatus.OK)
 
 async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
-    """Handles the /start command, sends an introduction message with website selection."""
+    """Handles the /start command by sending a greeting message."""
     keyboard = [
         [InlineKeyboardButton("Freelancer", callback_data="freelancer")],
         [InlineKeyboardButton("Upwork", callback_data="upwork")],
@@ -74,7 +75,7 @@ async def select_website(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handles the /job command, validates input, scrapes jobs, and sends results."""
+    """Handles the /job command by scraping and sending job listings."""
     user_input = update.message.text
     
     if not user_input.startswith("/job "):
@@ -94,18 +95,19 @@ async def jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚠️ Please select a website first by using /start.")
         return
     
-    jobs = scrape_jobs(JOB_SITES[selected_site], keywords)
+    jobs_list = scrape_jobs(JOB_SITES[selected_site], keywords)
     
     if jobs_list:
-        for job in jobs_list[:10]:  # Limit to top 5 jobs
+        for job in jobs_list[:5]:  # Limit to top 5 jobs
             message = f"📢 *New Job Alert!*\n\n*{job['title']}*\n{job['description']}\n\n[View Job]({job['link']})"
             await update.message.reply_text(message, parse_mode='Markdown', disable_web_page_preview=False)
             time.sleep(2)  # Avoid spamming Telegram
-        await update.message.reply_text(f"✅ Sent {len(jobs)} jobs to you!")
+        await update.message.reply_text(f"✅ Sent {len(jobs_list[:5])} jobs to you!")
     else:
         await update.message.reply_text("❌ No matching jobs found.")
 
 def scrape_jobs(url, keywords):
+    """Scrapes the selected website for jobs matching user-defined keywords."""
     response = requests.get(url)
     if response.status_code != 200:
         print("Failed to fetch page")
@@ -113,8 +115,8 @@ def scrape_jobs(url, keywords):
     
     soup = BeautifulSoup(response.text, "html.parser")
     job_elements = soup.select("div.JobSearchCard-item")  # Update selector if necessary
-    jobs = []
     
+    jobs = []
     for job in job_elements:
         title_element = job.select_one("a.JobSearchCard-primary-heading-link")
         description_element = job.select_one("p.JobSearchCard-primary-description")
@@ -132,6 +134,4 @@ def scrape_jobs(url, keywords):
 # Add handlers
 bot_builder.add_handler(CommandHandler(command="start", callback=start))
 bot_builder.add_handler(CallbackQueryHandler(select_website))
-bot_builder.add_handler(CommandHandler(command="job", callback=jobs))
-
-# Run the FastAPI app
+bot_builder.add_handler(CommandHandler(command="job", callback=jobs))  # Dynamic jobs handler
