@@ -12,7 +12,6 @@ from bs4 import BeautifulSoup
 # Load environment variables
 load_dotenv()
 TELEGRAM_BOT_TOKEN: str = os.getenv('BOT_TOKEN')
-TELEGRAM_ID: str = os.getenv('TELEGRAM_ID')
 WEBHOOK_DOMAIN: str = os.getenv('RENDER_URL')
 
 # Build the Telegram Bot application
@@ -43,22 +42,14 @@ async def process_update(request: Request):
     return Response(status_code=HTTPStatus.OK)
 
 async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
-    """Handles the /start command by sending a "Hello world!" message in response."""
-    await update.message.reply_text("HEYYY! Send me a message and I'll echo it back to you")
-
-async def echo(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    """Echo the user message."""
-    await update.message.reply_text(update.message.text)
+    """Handles the /start command by sending a greeting message."""
+    await update.message.reply_text("Hello! Use /jobs keyword1 - keyword2 - keyword3 to find jobs.")
 
 # Freelancer Jobs URL
 URL = "https://www.freelancer.com/jobs/software-development"
 
-# Keywords for filtering jobs
-FILTER_KEYWORDS = [
-"scaping", "Api"
-]
-
-def scrape_jobs():
+def scrape_jobs(keywords):
+    """Scrapes Freelancer for jobs matching user-defined keywords."""
     response = requests.get(URL)
     if response.status_code != 200:
         print("Failed to fetch page")
@@ -77,40 +68,36 @@ def scrape_jobs():
             description = description_element.get_text(strip=True)
             link = f"https://www.freelancer.com{title_element['href']}"
 
-            # Check if any keyword is in title or description
-            if any(keyword.lower() in (title + description).lower() for keyword in FILTER_KEYWORDS):
+            # Check if any user-specified keyword is in title or description
+            if any(keyword.lower() in (title + description).lower() for keyword in keywords):
                 jobs.append({"title": title, "description": description, "link": link})
-
     return jobs
-
-def send_to_telegram(job):
-    message = f"📢 *New Job Alert!*\n\n*{job['title']}*\n{job['description']}\n\n[View Job]({job['link']})"
-    telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    
-    payload = {
-        "chat_id": TELEGRAM_ID,
-        "text": message,
-        "parse_mode": "Markdown",
-        "disable_web_page_preview": False
-    }
-    
-    requests.post(telegram_url, json=payload)
 
 async def jobs(update: Update, _: ContextTypes.DEFAULT_TYPE):
     """Handles the /jobs command by scraping and sending job listings."""
-    jobs = scrape_jobs()
+    message_text = update.message.text
+    parts = message_text.split("/jobs")
+    if len(parts) < 2 or not parts[1].strip():
+        await update.message.reply_text("❌ Please enter keywords like: /jobs python - scraping - API")
+        return
+
+    # Extract and clean keywords
+    keywords = [word.strip() for word in parts[1].split("-") if word.strip()]
     
-    if jobs:
-        for job in jobs:
+    if not keywords:
+        await update.message.reply_text("❌ Please provide at least one keyword.")
+        return
+
+    jobs_list = scrape_jobs(keywords)
+    
+    if jobs_list:
+        for job in jobs_list[:5]:  # Limit to top 5 jobs
             message = f"📢 *New Job Alert!*\n\n*{job['title']}*\n{job['description']}\n\n[View Job]({job['link']})"
             await update.message.reply_text(message, parse_mode='Markdown', disable_web_page_preview=False)
             time.sleep(2)  # Avoid spamming Telegram
-        await update.message.reply_text(f"✅ Sent {len(jobs)} jobs to you!")
+        await update.message.reply_text(f"✅ Sent {len(jobs_list[:5])} jobs to you!")
     else:
         await update.message.reply_text("❌ No matching jobs found.")
 
 bot_builder.add_handler(CommandHandler(command="start", callback=start))
-bot_builder.add_handler(MessageHandler(filters=filters.TEXT & ~filters.COMMAND, callback=echo))
-bot_builder.add_handler(CommandHandler(command="jobs", callback=jobs))  # Add the /jobs command handler
-
-# Run the FastAPI app (assuming the app is hosted using an ASGI server like Uvicorn)
+bot_builder.add_handler(CommandHandler(command="jobs", callback=jobs))  # Dynamic jobs handler
