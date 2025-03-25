@@ -9,7 +9,6 @@ from telegram.ext import Application, ContextTypes, CommandHandler, MessageHandl
 import requests
 from bs4 import BeautifulSoup
 
-
 # Load environment variables
 load_dotenv()
 TELEGRAM_BOT_TOKEN: str = os.getenv('BOT_TOKEN')
@@ -33,7 +32,6 @@ async def lifespan(_: FastAPI):
         yield
         await bot_builder.stop()
 
-
 app = FastAPI(lifespan=lifespan)
 
 @app.post("/")
@@ -44,20 +42,13 @@ async def process_update(request: Request):
     await bot_builder.process_update(update)
     return Response(status_code=HTTPStatus.OK)
 
-
 async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
     """Handles the /start command by sending a "Hello world!" message in response."""
     await update.message.reply_text("HEYYY! Send me a message and I'll echo it back to you")
 
-
 async def echo(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
     await update.message.reply_text(update.message.text)
-
-
-bot_builder.add_handler(CommandHandler(command="start", callback=start))
-bot_builder.add_handler(MessageHandler(filters=filters.TEXT & ~filters.COMMAND, callback=echo))
-
 
 # Freelancer Jobs URL
 URL = "https://www.freelancer.com/jobs/software-development"
@@ -103,7 +94,7 @@ def scrape_jobs():
             # Check if any keyword is in title or description
             if any(keyword.lower() in (title + description).lower() for keyword in FILTER_KEYWORDS):
                 jobs.append({"title": title, "description": description, "link": link})
-    
+
     return jobs
 
 def send_to_telegram(job):
@@ -119,17 +110,21 @@ def send_to_telegram(job):
     
     requests.post(telegram_url, json=payload)
 
-@app.get("/scrape-jobs")
-async def scrape_and_send_jobs():
-    """Endpoint to manually trigger the scraping and sending jobs to Telegram."""
-    print("🔍 Scraping Freelancer Jobs...")
+async def jobs(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    """Handles the /jobs command by scraping and sending job listings."""
     jobs = scrape_jobs()
     
     if jobs:
         for job in jobs:
-            send_to_telegram(job)
+            message = f"📢 *New Job Alert!*\n\n*{job['title']}*\n{job['description']}\n\n[View Job]({job['link']})"
+            await update.message.reply_text(message, parse_mode='Markdown', disable_web_page_preview=False)
             time.sleep(2)  # Avoid spamming Telegram
-        return {"status": "success", "message": f"✅ Sent {len(jobs)} jobs to Telegram."}
+        await update.message.reply_text(f"✅ Sent {len(jobs)} jobs to you!")
     else:
-        return {"status": "no jobs", "message": "❌ No matching jobs found."}
+        await update.message.reply_text("❌ No matching jobs found.")
 
+bot_builder.add_handler(CommandHandler(command="start", callback=start))
+bot_builder.add_handler(MessageHandler(filters=filters.TEXT & ~filters.COMMAND, callback=echo))
+bot_builder.add_handler(CommandHandler(command="jobs", callback=jobs))  # Add the /jobs command handler
+
+# Run the FastAPI app (assuming the app is hosted using an ASGI server like Uvicorn)
