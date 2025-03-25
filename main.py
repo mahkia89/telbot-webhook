@@ -96,15 +96,11 @@ async def jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     jobs = scrape_jobs(JOB_SITES[selected_site], keywords)
     
-    if jobs:
-        for job in jobs:
-                    message = f"📢 *New Job Alert!*\n" \
-                  f"*{job['title']}*\n" \
-                  f"{job['description']}\n" \
-                  f"[View Job]({job['link']})"
-
+    if jobs_list:
+        for job in jobs_list[:10]:  # Limit to top 5 jobs
+            message = f"📢 *New Job Alert!*\n\n*{job['title']}*\n{job['description']}\n\n[View Job]({job['link']})"
             await update.message.reply_text(message, parse_mode='Markdown', disable_web_page_preview=False)
-            time.sleep(2)
+            time.sleep(2)  # Avoid spamming Telegram
         await update.message.reply_text(f"✅ Sent {len(jobs)} jobs to you!")
     else:
         await update.message.reply_text("❌ No matching jobs found.")
