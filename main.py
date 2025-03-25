@@ -116,10 +116,7 @@ async def jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if jobs:
         for job in jobs[:5]:  # Limit to top 5 jobs
-            message = f"📢 *New Job Alert!*
-\n*{job['title']}*
-{job['description']}
-\n[View Job]({job['link']})"
+            message = f"📢 *New Job Alert!*\n*{job['title']}*{job['description']}\n[View Job]({job['link']})"
             await update.message.reply_text(message, parse_mode='Markdown', disable_web_page_preview=False)
             time.sleep(2)  # Avoid spamming Telegram
         await update.message.reply_text(f"✅ Sent {len(jobs[:5])} jobs to you!")
