@@ -89,7 +89,6 @@ async def jobs(update: Update, _: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Please provide at least one keyword.")
         return
 
-Mahkia, [3/25/2025 4:09 PM]
 jobs_list = scrape_jobs(keywords)
     
     if jobs_list:
