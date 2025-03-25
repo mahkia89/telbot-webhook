@@ -96,7 +96,7 @@ def scrape_jobs(keywords, site):
     if site == "freelancer":
         job_elements = soup.select("div.JobSearchCard-item")
     else:  # LaborX
-        job_elements = soup.select("div.JobItem")
+        job_elements = soup.select("a.job-title.job-link.row")
 
     jobs = []
     for job in job_elements:
@@ -105,9 +105,12 @@ def scrape_jobs(keywords, site):
             description_element = job.select_one("p.JobSearchCard-primary-description")
             link = f"https://www.freelancer.com{title_element['href']}" if title_element else ""
         else:  # LaborX
-            title_element = job.select_one("h3 a")
-            description_element = job.select_one("p")
-            link = f"https://laborx.com{title_element['href']}" if title_element else ""
+           title_element = job  # The <a> tag itself
+           title = title_element.get_text(strip=True)  # Extract job title text
+           description_element = job.find_next("p")  # Try to find the description in the next <p> tag
+           description = description_element.get_text(strip=True) if description_element else "No description available"
+           link = f"https://laborx.com{job['href']}" if job.has_attr("href") else ""
+
 
         if title_element and description_element:
             title = title_element.get_text(strip=True)
