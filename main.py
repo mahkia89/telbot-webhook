@@ -1,5 +1,5 @@
 import os
-import time
+from datetime import time
 import asyncio
 from contextlib import asynccontextmanager
 from http import HTTPStatus
