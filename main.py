@@ -83,15 +83,13 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def capture_keywords(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Captures user input and saves default keywords for the daily report."""
-    if context.user_data.get("awaiting_keywords"):
-        keywords = update.message.text
-        context.user_data["default_keywords"] = [word.strip() for word in keywords.split("-") if word.strip()]
-        context.user_data["awaiting_keywords"] = False  # Reset flag
+    if  keywords = update.message.text.split("-")
+        keywords = [word.strip() for word in keywords]
+        context.user_data["daily_keywords"] = keywords
+        await update.message.reply_text(f"✅ Keywords saved: {', '.join(keywords)}")
 
-        await update.message.reply_text(f" Default keywords saved: {', '.join(context.user_data['default_keywords'])}\nYou will receive daily job updates at 9 AM UTC.")
-        
-        # Schedule daily report
-        context.job_queue.run_daily(daily_job_alert, time=time(9, 0), context=update.message.chat_id)  # Run daily at 9 AM UTC
+        # Schedule a daily job at 9 AM UTC
+        context.job_queue.run_daily(daily_job_alert, time=time(9, 0), job_context=update.message.chat_id)
     else:
         await update.message.reply_text(" Please use /daily_report to set default keywords first.")
 
