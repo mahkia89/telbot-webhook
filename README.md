@@ -3,6 +3,10 @@
 ## 📌 Overview
 This project is a Telegram bot that helps users find software development jobs from **Freelancer** and **LaborX**. Users can search for jobs using keywords, receive daily job updates, and interact with the bot via inline keyboard buttons. 🚀
 
+**🔗 Check the bot here:** [@trial_telbot](https://t.me/trial_telbot)
+
+⚠️ **Note:** Since the bot is hosted on **Render**, the first message might take **less than a minute** to activate, but after that, messages will be received instantly like a normal bot due to the webhook and Render environment.
+
 ## 🔥 Features
 - 🔍 Search for jobs on **Freelancer** and **LaborX** using custom keywords.
 - ⏰ Receive **daily job updates** at 9 AM UTC.
