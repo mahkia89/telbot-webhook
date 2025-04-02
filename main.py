@@ -82,16 +82,34 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(f"You selected: {query.data.capitalize()}\nUse /jobs keyword1 - keyword2 to search for jobs.")
 
 async def capture_keywords(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Captures user input and saves default keywords for the daily report."""
-    if  keywords = update.message.text.split("-")
-        keywords = [word.strip() for word in keywords]
-        context.user_data["daily_keywords"] = keywords
-        await update.message.reply_text(f"✅ Keywords saved: {', '.join(keywords)}")
+    """Handles keyword capture for daily job alerts."""
+    
+    if not context.user_data.get("awaiting_keywords"):
+        await update.message.reply_text("❌ Please use /daily_report to set default keywords first.")
+        return
 
-        # Schedule a daily job at 9 AM UTC
-        context.job_queue.run_daily(daily_job_alert, time=time(9, 0), job_context=update.message.chat_id)
-    else:
-        await update.message.reply_text(" Please use /daily_report to set default keywords first.")
+    # Extract and store keywords
+    context.user_data["default_keywords"] = parse_keywords(update.message.text)
+    context.user_data["awaiting_keywords"] = False  # Reset flag
+
+    await update.message.reply_text(
+        f"✅ Default keywords saved: {', '.join(context.user_data['default_keywords'])}\n"
+        "You will receive daily job updates at 9 AM UTC."
+    )
+
+    # Schedule daily job alert at 9 AM UTC
+    schedule_daily_job(context, update.message.chat_id)
+
+
+def parse_keywords(text: str) -> list:
+    """Parses and cleans keywords from user input."""
+    return [word.strip() for word in text.split("-") if word.strip()]
+
+
+def schedule_daily_job(context: ContextTypes.DEFAULT_TYPE, chat_id: int):
+    """Schedules the daily job alert at 9 AM UTC."""
+    context.job_queue.run_daily(daily_job_alert, time=time(9, 0), context=chat_id)
+
 
 async def daily_job_alert(context: ContextTypes.DEFAULT_TYPE):
     """Sends daily job updates to users."""
