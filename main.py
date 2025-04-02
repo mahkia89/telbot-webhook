@@ -108,12 +108,12 @@ def parse_keywords(text: str) -> list:
 
 def schedule_daily_job(context: ContextTypes.DEFAULT_TYPE, chat_id: int):
     """Schedules the daily job alert at 9 AM UTC."""
-    context.job_queue.run_daily(daily_job_alert, time=time(9, 0), context=chat_id)
+    context.job_queue.run_daily(daily_job_alert, time=time(9, 0), data=chat_id)
 
 
 async def daily_job_alert(context: ContextTypes.DEFAULT_TYPE):
     """Sends daily job updates to users."""
-    chat_id = context.job.context
+    chat_id = context.job.data
     keywords = context.user_data.get("default_keywords", [])
 
     if not keywords:
